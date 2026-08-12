@@ -63,6 +63,27 @@ test("rejects evidence missing a quote", () => {
   assert.ok(reasons.some((r) => r.includes("quote")));
 });
 
+test("rejects an evidence path that climbs out of the repository", () => {
+  const reasons = validateShape({
+    ...good,
+    evidence: [{ path: "../../etc/passwd", lines: "1-1", quote: "root:x:0:0:root" }],
+  });
+  assert.ok(reasons.some((r) => r.includes("inside the repository")));
+});
+
+test("rejects an absolute evidence path", () => {
+  const reasons = validateShape({
+    ...good,
+    evidence: [{ path: "/etc/passwd", lines: "1-1", quote: "root:x:0:0:root" }],
+  });
+  assert.ok(reasons.some((r) => r.includes("inside the repository")));
+});
+
+test("rejects a quote too short to be a useful tripwire", () => {
+  const reasons = validateShape({ ...good, evidence: [{ path: "a.js", lines: "1-1", quote: "import" }] });
+  assert.ok(reasons.some((r) => r.includes("12 characters")));
+});
+
 test("rejects a statement naming a tool that is not an English word", () => {
   const reasons = validateShape({ ...good, statement: "Release notes are gathered with WebFetch." });
   assert.ok(reasons.some((r) => r.includes("tool name")));

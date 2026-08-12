@@ -17,7 +17,7 @@ const rules = [
     statement: "Test files use the node:test runner.",
     source: "observed",
     support: { followed: 12, candidates: 12, authors: 3, dirs: 2 },
-    evidence: [{ path: "spec/parse_spec.js", lines: "1-1", quote: "node:test" }],
+    evidence: [{ path: "spec/parse_spec.js", lines: "1-1", quote: "import test from \"node:test\";" }],
   },
   {
     id: "tooling.package-manager.pnpm",
