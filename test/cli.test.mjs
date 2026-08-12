@@ -1,7 +1,7 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, existsSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { makeRepo, cleanupRepos } from "./fixtures/make-repo.mjs";
 
@@ -57,6 +57,34 @@ test("check removes a rules file when its whole topic expires", () => {
   rmSync(join(root, "package.json"));
   run(["check"], root);
   assert.equal(existsSync(join(root, ".claude", "rules", "tooling.md")), false);
+});
+
+test("a hand-written rules file survives a scan that overwrites nothing else", () => {
+  const root = makeRepo({ files: { "package.json": PKG } });
+  mkdirSync(join(root, ".claude", "rules"), { recursive: true });
+  writeFileSync(join(root, ".claude", "rules", "team-conventions.md"), "# ours\n\nHand written.\n");
+  const out = run(["scan"], root);
+  assert.match(out, /left \.claude\/rules\/team-conventions\.md alone/);
+  assert.equal(readFileSync(join(root, ".claude", "rules", "team-conventions.md"), "utf8"), "# ours\n\nHand written.\n");
+});
+
+test("a hand-written rules file survives every rule expiring", () => {
+  const root = makeRepo({ files: { "package.json": PKG } });
+  run(["scan"], root);
+  writeFileSync(join(root, ".claude", "rules", "team-conventions.md"), "# ours\n");
+  rmSync(join(root, "package.json"));
+  run(["check"], root);
+  assert.equal(existsSync(join(root, ".claude", "rules", "team-conventions.md")), true);
+  assert.equal(existsSync(join(root, ".claude", "rules", "tooling.md")), false);
+});
+
+test("a hand-written file occupying a generated name is left alone and reported", () => {
+  const root = makeRepo({ files: { "package.json": PKG } });
+  mkdirSync(join(root, ".claude", "rules"), { recursive: true });
+  writeFileSync(join(root, ".claude", "rules", "tooling.md"), "# ours, not yours\n");
+  const out = run(["scan"], root);
+  assert.match(out, /left \.claude\/rules\/tooling\.md alone/);
+  assert.equal(readFileSync(join(root, ".claude", "rules", "tooling.md"), "utf8"), "# ours, not yours\n");
 });
 
 test("scan on a repo that declares nothing says so and writes no rules directory", () => {
