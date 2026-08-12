@@ -55,3 +55,25 @@ test("REPO_RULES_HOME wins when it holds a rules file", () => {
   assert.equal(resolved.mode, "env");
   assert.equal(resolved.dir, override);
 });
+
+// Identity must not fall back to repoRoot: with no remote, the id has to come
+// from gitCommonDir alone, and that is the one path the brief's own tests never
+// exercised through a worktree (the no-remote test never adds one, and the
+// worktree test always sets a remote, so it proves stability via remoteUrl only).
+test("a linked worktree keeps the same repo id as its main clone even with no remote", () => {
+  const root = makeRepo();
+  const wt = addWorktree(root, "no-remote-feature");
+  assert.equal(repoFacts(wt).repoId, repoFacts(root).repoId);
+});
+
+test("resolves the home directory when nothing else does", () => {
+  const root = makeRepo({ remote: "git@github.com:acme/web.git" });
+  const facts = repoFacts(root);
+  const home = join(root, "home");
+  const homeDir = join(home, ".claude", "repo-rules", facts.repoId);
+  mkdirSync(homeDir, { recursive: true });
+  writeFileSync(join(homeDir, "rules.json"), "[]");
+  const resolved = resolveRulesDir(facts, { HOME: home });
+  assert.equal(resolved.mode, "home");
+  assert.equal(resolved.dir, homeDir);
+});
