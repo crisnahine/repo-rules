@@ -13,4 +13,8 @@ Run the scan and report the result to the user.
 This pass reads only committed configuration files and quotes them. It infers nothing, so
 every statement it produces is a quotation the user can check against the cited file.
 
+Running this command again overwrites `rules.json` with the full detector output, restoring
+every rule the detectors find, including ones the user already declined. There is no memory
+of a prior "no": if the user curated the list last time, tell them to do it again.
+
 Do not commit anything. Tell the user which files changed and let them decide.

@@ -112,6 +112,11 @@ test("check on an unscanned repo exits 0 and says nothing was found", () => {
   assert.match(run(["check"], root), /no rules/i);
 });
 
+test("render on an unscanned repo exits 0 and says nothing was found", () => {
+  const root = makeRepo();
+  assert.match(run(["render"], root), /no rules/i);
+});
+
 test("the CLI exits non-zero outside a git repository and writes nothing", () => {
   const dir = mkdtempSync(join(tmpdir(), "repo-rules-nogit-"));
   try {
@@ -146,6 +151,21 @@ test("check expires the CI gate rule only when the cited run step itself changes
   assert.match(out, /0 live/);
   assert.match(out, /1 expired/);
   assert.match(out, /expired tooling\.ci-gate/);
+});
+
+test("a package manager patch bump leaves the rule live but a manager change expires it", () => {
+  const root = makeRepo({ files: { "package.json": JSON.stringify({ packageManager: "pnpm@9.1.0" }, null, 2) } });
+  run(["scan"], root);
+
+  writeFileSync(join(root, "package.json"), JSON.stringify({ packageManager: "pnpm@9.1.1" }, null, 2));
+  let out = run(["check"], root);
+  assert.match(out, /1 live/);
+  assert.match(out, /0 expired/);
+
+  writeFileSync(join(root, "package.json"), JSON.stringify({ packageManager: "yarn@4.0.0" }, null, 2));
+  out = run(["check"], root);
+  assert.match(out, /0 live/);
+  assert.match(out, /1 expired/);
 });
 
 test("check reports a removed file the way it reports a foreign one", () => {

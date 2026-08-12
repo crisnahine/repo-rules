@@ -100,6 +100,14 @@ test("the CI gate statement names only the first citable command", () => {
   assert.ok(!rule.statement.includes("pnpm test"));
 });
 
+test("a patch bump of the pinned package manager version does not change the citation", () => {
+  const root = makeRepo({ files: { "package.json": JSON.stringify({ packageManager: "pnpm@9.1.0" }, null, 2) } });
+  const rule = detectDeclared(root).find((r) => r.id === "tooling.package-manager");
+  assert.ok(rule, "expected a package manager rule");
+  assert.ok(!rule.evidence[0].quote.includes("9.1.0"));
+  assert.ok(rule.evidence[0].quote.includes("pnpm"));
+});
+
 test("emits nothing for a repo that declares nothing", () => {
   const root = makeRepo();
   assert.deepEqual(detectDeclared(root), []);

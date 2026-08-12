@@ -119,3 +119,14 @@ test("a mid-sentence imperative word does not make a declarative statement imper
     [],
   );
 });
+
+test("rejects yours and yourself as second person", () => {
+  const yours = validateShape({ ...good, statement: "Tests live in spec/, which is yours to maintain." });
+  assert.ok(yours.some((r) => r.includes("second person")));
+  const yourself = validateShape({ ...good, statement: "This module manages state for yourself." });
+  assert.ok(yourself.some((r) => r.includes("second person")));
+});
+
+test("accepts a hyphenated word that shares a prefix with an imperative opener", () => {
+  assert.deepEqual(validateShape({ ...good, statement: "Write-behind caching is used in cache/." }), []);
+});
