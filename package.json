@@ -1,0 +1,11 @@
+{
+  "name": "repo-rules",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Extracts a repository's own conventions into .claude/rules/ and expires them when their evidence disappears",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test 'test/**/*.test.mjs'"
+  }
+}
