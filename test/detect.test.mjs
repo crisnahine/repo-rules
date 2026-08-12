@@ -42,6 +42,37 @@ test("detects the CI gate commands from a GitHub workflow", () => {
   assert.equal(rule.evidence[0].path, ".github/workflows/ci.yml");
 });
 
+test("survives a chained test command and a multi-range engines field", async () => {
+  const { validateRuleSet } = await import("../lib/validate.mjs");
+  const root = makeRepo({
+    files: {
+      "package.json": JSON.stringify(
+        { engines: { node: ">=18 <19 || >=20" }, scripts: { test: "eslint . && vitest run" } },
+        null,
+        2,
+      ),
+    },
+  });
+  const result = validateRuleSet(detectDeclared(root));
+  assert.deepEqual(result.rejected, []);
+  assert.equal(result.accepted.length, 2);
+});
+
+test("detects a package.json written without spaces after the colon", () => {
+  const root = makeRepo({ files: { "package.json": '{"engines":{"node":">=20"}}' } });
+  const rule = detectDeclared(root).find((r) => r.id === "tooling.runtime-version");
+  assert.ok(rule, "expected a runtime version rule");
+  assert.ok(rule.evidence[0].quote.includes("node"));
+});
+
+test("a block-scalar first step does not veto CI gate detection", () => {
+  const workflow = "jobs:\n  ci:\n    steps:\n      - run: |\n          npm ci\n          npm run build\n      - run: pnpm lint --max-warnings 0\n";
+  const root = makeRepo({ files: { ".github/workflows/ci.yml": workflow } });
+  const rule = detectDeclared(root).find((r) => r.id === "tooling.ci-gate");
+  assert.ok(rule, "expected a CI gate rule");
+  assert.ok(rule.evidence[0].quote.includes("pnpm lint"));
+});
+
 test("emits nothing for a repo that declares nothing", () => {
   const root = makeRepo();
   assert.deepEqual(detectDeclared(root), []);
