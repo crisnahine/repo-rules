@@ -38,6 +38,11 @@ test("rejects an observed rule below the ratio", () => {
   assert.ok(checkGate(rule).some((r) => r.includes("ratio")));
 });
 
+test("rejects support claiming more followers than candidates", () => {
+  const rule = { ...observed, support: { followed: 20, candidates: 10, authors: 4, dirs: 3 } };
+  assert.ok(checkGate(rule).some((r) => r.includes("malformed")));
+});
+
 test("rejects an observed rule from a single author", () => {
   const rule = { ...observed, support: { followed: 14, candidates: 14, authors: 1, dirs: 3 } };
   assert.ok(checkGate(rule).some((r) => r.includes("author")));
