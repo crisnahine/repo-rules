@@ -1,6 +1,7 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { writeFileSync, rmSync } from "node:fs";
+import { writeFileSync, rmSync, mkdtempSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveEvidence, expire } from "../lib/evidence.mjs";
 import { makeRepo, cleanupRepos } from "./fixtures/make-repo.mjs";
@@ -79,6 +80,23 @@ test("a citation whose path escapes the repository is dead", () => {
   const { dead } = resolveEvidence(rule, root);
   assert.equal(dead.length, 1);
   assert.match(dead[0].reason, /escapes/);
+});
+
+test("a citation through a symlink pointing outside the repository is dead", () => {
+  const outsideDir = mkdtempSync(join(tmpdir(), "repo-rules-outside-"));
+  const outsideFile = join(outsideDir, "creds.txt");
+  writeFileSync(outsideFile, "super-secret-token-value\n");
+  const root = makeRepo({ files: { "placeholder.txt": "x\n" } });
+  symlinkSync(outsideFile, join(root, "outside.txt"));
+  try {
+    const rule = ruleWith([{ path: "outside.txt", lines: "1-1", quote: "super-secret-token-value" }]);
+    const { live, dead } = resolveEvidence(rule, root);
+    assert.equal(live.length, 0);
+    assert.equal(dead.length, 1);
+    assert.match(dead[0].reason, /escapes|resolved/);
+  } finally {
+    rmSync(outsideDir, { recursive: true, force: true });
+  }
 });
 
 test("a rule with living evidence survives, carrying only its live citations", () => {

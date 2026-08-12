@@ -14,10 +14,20 @@ function rulesPath(root) {
   return join(root, ".claude", "repo-rules", "rules.json");
 }
 
-function loadRules(root) {
+// rules.json is committed and hand-edited (scan.md tells a human to prune it), so check and
+// render can never trust it the way scan trusts its own detector output. Runs the same
+// validator scan does and reports the same way, so a hand edit that breaks shape is dropped
+// with a reason instead of reaching the renderer or the evidence resolver.
+function loadRuleset(root) {
   const path = rulesPath(root);
   if (!existsSync(path)) return null;
-  return JSON.parse(readFileSync(path, "utf8"));
+  const parsed = JSON.parse(readFileSync(path, "utf8"));
+  if (!Array.isArray(parsed)) {
+    throw new Error("rules.json must contain an array of rules");
+  }
+  const { accepted, rejected } = validateRuleSet(parsed);
+  for (const item of rejected) console.log(`dropped ${item.id}: ${item.reasons.join("; ")}`);
+  return accepted;
 }
 
 function isGenerated(path) {
@@ -85,7 +95,7 @@ function scan(root) {
 }
 
 function check(root) {
-  const rules = loadRules(root);
+  const rules = loadRuleset(root);
   if (rules === null) {
     console.log("no rules for this repo; run repo-rules scan");
     return;
@@ -99,7 +109,7 @@ function check(root) {
 }
 
 function renderOnly(root) {
-  const rules = loadRules(root);
+  const rules = loadRuleset(root);
   if (rules === null) {
     console.log("no rules for this repo; run repo-rules scan");
     return;
