@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { canonicalRemoteUrl, repoIdFromUrl } from "../lib/repo.mjs";
 
 test("ssh and https forms of the same repo canonicalise identically", () => {
-  const a = canonicalRemoteUrl("git@github.com:empire-flippers/api.git");
-  const b = canonicalRemoteUrl("https://github.com/empire-flippers/api");
-  assert.equal(a, "https://github.com/empire-flippers/api");
+  const a = canonicalRemoteUrl("git@github.com:acme/api.git");
+  const b = canonicalRemoteUrl("https://github.com/acme/api");
+  assert.equal(a, "https://github.com/acme/api");
   assert.equal(a, b);
 });
 
