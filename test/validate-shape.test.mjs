@@ -62,3 +62,32 @@ test("rejects evidence missing a quote", () => {
   const reasons = validateShape({ ...good, evidence: [{ path: "a.js", lines: "1-2" }] });
   assert.ok(reasons.some((r) => r.includes("quote")));
 });
+
+test("rejects a statement naming a tool that is not an English word", () => {
+  const reasons = validateShape({ ...good, statement: "Release notes are gathered with WebFetch." });
+  assert.ok(reasons.some((r) => r.includes("tool name")));
+});
+
+test("accepts statements whose words merely collide with tool names", () => {
+  for (const statement of [
+    "Read replicas are configured in db.yml.",
+    "Task definitions live in tasks/board.js.",
+    "Postgres uses write-ahead logging for durability.",
+  ]) {
+    assert.deepEqual(validateShape({ ...good, statement }), [], statement);
+  }
+});
+
+test("rejects an imperative hidden behind one leading connective", () => {
+  for (const statement of ["So, always run the linter first.", "Note: use tabs for indentation."]) {
+    const reasons = validateShape({ ...good, statement });
+    assert.ok(reasons.some((r) => r.includes("imperative")), statement);
+  }
+});
+
+test("a mid-sentence imperative word does not make a declarative statement imperative", () => {
+  assert.deepEqual(
+    validateShape({ ...good, statement: "Unit tests live in spec/, never in test/ or __tests__/." }),
+    [],
+  );
+});
