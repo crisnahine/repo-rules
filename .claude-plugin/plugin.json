@@ -2,6 +2,7 @@
   "name": "repo-rules",
   "version": "0.1.0",
   "description": "Extracts a repository's own conventions into .claude/rules/, with citations that resolve, and expires each rule when its evidence disappears.",
+  "author": { "name": "crisn", "email": "crisn@empireflippers.com" },
   "license": "MIT",
   "keywords": ["conventions", "code-review", "rules", "codebase"]
 }
