@@ -63,6 +63,18 @@ test("the output carries the generator banner and no imperatives", () => {
   assert.ok(!/\byour?\b/i.test(body.split("---")[2] ?? body));
 });
 
+test("a declared rule renders no denominator", () => {
+  const body = render(rules).get("tooling.md");
+  assert.ok(body.includes("The package manager is pnpm, pinned in package.json."));
+  assert.ok(!body.includes("of 1 sites"));
+});
+
+test("a path containing a quote stays valid YAML", () => {
+  const odd = [{ ...rules[0], id: "odd.one", paths: ['we"ird/'] }];
+  const body = render(odd).get("odd.md");
+  assert.ok(body.includes('  - "we\\"ird/**"'));
+});
+
 test("rendering is deterministic", () => {
   assert.deepEqual([...render(rules)], [...render([...rules].reverse())]);
 });
