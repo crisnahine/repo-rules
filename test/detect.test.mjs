@@ -89,6 +89,17 @@ test("cites the script, not a dependency that happens to share its name", () => 
   assert.ok(!rule.evidence[0].quote.includes("^1.0.0"));
 });
 
+test("the CI gate statement names only the first citable command", () => {
+  const workflow =
+    "jobs:\n  ci:\n    steps:\n      - run: pnpm lint --max-warnings 0 --cache\n      - run: pnpm typecheck\n      - run: pnpm test\n";
+  const root = makeRepo({ files: { ".github/workflows/ci.yml": workflow } });
+  const rule = detectDeclared(root).find((r) => r.id === "tooling.ci-gate");
+  assert.ok(rule, "expected a CI gate rule");
+  assert.ok(rule.statement.includes("pnpm lint --max-warnings 0 --cache"));
+  assert.ok(!rule.statement.includes("pnpm typecheck"));
+  assert.ok(!rule.statement.includes("pnpm test"));
+});
+
 test("emits nothing for a repo that declares nothing", () => {
   const root = makeRepo();
   assert.deepEqual(detectDeclared(root), []);
