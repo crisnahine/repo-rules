@@ -73,6 +73,22 @@ test("a block-scalar first step does not veto CI gate detection", () => {
   assert.ok(rule.evidence[0].quote.includes("pnpm lint"));
 });
 
+test("cites the script, not a dependency that happens to share its name", () => {
+  const root = makeRepo({
+    files: {
+      "package.json": JSON.stringify(
+        { dependencies: { test: "^1.0.0" }, scripts: { test: "vitest run --coverage" } },
+        null,
+        2,
+      ),
+    },
+  });
+  const rule = detectDeclared(root).find((r) => r.id === "tooling.test-command");
+  assert.ok(rule, "expected a test command rule");
+  assert.ok(rule.evidence[0].quote.includes("vitest run --coverage"));
+  assert.ok(!rule.evidence[0].quote.includes("^1.0.0"));
+});
+
 test("emits nothing for a repo that declares nothing", () => {
   const root = makeRepo();
   assert.deepEqual(detectDeclared(root), []);
