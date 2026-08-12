@@ -12,6 +12,10 @@ placement.
 
 ## Install
 
+```bash
+git clone https://github.com/crisnahine/repo-rules.git
+```
+
 This repository does not ship its own marketplace manifest, so wrap it in one to install it
 locally. Add a `.claude-plugin/marketplace.json` next to this checkout (or in a fork):
 
