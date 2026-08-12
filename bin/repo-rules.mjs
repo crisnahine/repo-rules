@@ -5,7 +5,7 @@ import { repoFacts } from "../lib/repo.mjs";
 import { detectDeclared } from "../lib/detect.mjs";
 import { validateRuleSet } from "../lib/validate.mjs";
 import { expire } from "../lib/evidence.mjs";
-import { render, GENERATED_MARKER } from "../lib/render.mjs";
+import { render, GENERATOR_FRONTMATTER } from "../lib/render.mjs";
 import { writeAtomic } from "../lib/io.mjs";
 
 const USAGE = "usage: repo-rules <scan|check|render>";
@@ -32,7 +32,7 @@ function loadRuleset(root) {
 
 function isGenerated(path) {
   try {
-    return readFileSync(path, "utf8").includes(GENERATED_MARKER);
+    return readFileSync(path, "utf8").includes(GENERATOR_FRONTMATTER);
   } catch {
     return false;
   }
@@ -40,7 +40,7 @@ function isGenerated(path) {
 
 // Rewrite this plugin's own files each time so an expired topic leaves no orphan behind.
 //
-// Only files carrying the generated marker are ever removed or replaced. `.claude/rules/` is a
+// Only files carrying the generator marker are ever removed or replaced. `.claude/rules/` is a
 // directory Claude Code shares with whatever the team writes by hand, and deleting someone
 // else's rules would be both destructive and invisible. Returns the names left alone and the
 // names removed so the caller can say so out loud; a deletion must never be silent.

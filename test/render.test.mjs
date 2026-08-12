@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { render, GENERATED_MARKER } from "../lib/render.mjs";
+import { render, GENERATED_MARKER, GENERATOR_FRONTMATTER } from "../lib/render.mjs";
 
 const rules = [
   {
@@ -61,6 +61,12 @@ test("the output carries the generator banner and no imperatives", () => {
   const body = render(rules).get("testing.md");
   assert.ok(body.includes(GENERATED_MARKER));
   assert.ok(!/\byour?\b/i.test(body.split("---")[2] ?? body));
+});
+
+test("the frontmatter carries the generator ownership marker", () => {
+  const body = render(rules).get("testing.md");
+  const frontmatter = body.split("---")[1] ?? "";
+  assert.ok(frontmatter.includes(GENERATOR_FRONTMATTER));
 });
 
 test("a declared rule renders no denominator", () => {
