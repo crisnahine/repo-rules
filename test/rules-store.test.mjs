@@ -141,3 +141,26 @@ test("REPO_RULES_HOME redirects both save and load away from the repo's own .cla
   assert.equal(found, true);
   assert.equal(rules[0].id, "tooling.example");
 });
+
+test("an existing store under the home directory is the one that gets loaded", () => {
+  const root = makeDir();
+  const facts = factsFor(root);
+  const home = join(root, "home");
+  const homeStore = join(home, ".claude", "repo-rules", facts.repoId);
+  mkdirSync(homeStore, { recursive: true });
+  writeFileSync(join(homeStore, "rules.json"), JSON.stringify([ruleFor("tooling")], null, 2));
+  const { found, rules } = load(facts, { HOME: home });
+  assert.equal(found, true);
+  assert.equal(rules[0].id, "tooling.example");
+});
+
+test("the committed store wins over a home store when both exist", () => {
+  const root = makeDir();
+  const facts = factsFor(root);
+  const home = join(root, "home");
+  const homeStore = join(home, ".claude", "repo-rules", facts.repoId);
+  mkdirSync(homeStore, { recursive: true });
+  writeFileSync(join(homeStore, "rules.json"), JSON.stringify([ruleFor("wrong")], null, 2));
+  save(facts, [ruleFor("tooling")], {});
+  assert.equal(load(facts, { HOME: home }).rules[0].id, "tooling.example");
+});
