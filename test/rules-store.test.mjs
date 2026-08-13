@@ -66,7 +66,7 @@ test("save leaves a hand-written file occupying a generated name alone", () => {
 test("a hand-written file quoting the frontmatter line further down is still left alone", () => {
   const root = makeDir();
   mkdirSync(rulesDirOf(root), { recursive: true });
-  const prose = `# Team notes\n${"\n".repeat(20)}We used to write generator: repo-rules in these files.\n`;
+  const prose = `# Team notes\n${"\n".repeat(20)}generator: repo-rules\n`;
   writeFileSync(join(rulesDirOf(root), "team.md"), prose);
   const outcome = save(factsFor(root), [], {});
   assert.deepEqual(outcome.foreign, ["team.md"]);
@@ -127,4 +127,17 @@ test("load throws a readable error when rules.json is not an array", () => {
   mkdirSync(storeDir(facts, {}), { recursive: true });
   writeFileSync(join(storeDir(facts, {}), "rules.json"), JSON.stringify({ not: "an array" }));
   assert.throws(() => load(facts, {}), /array/);
+});
+
+test("REPO_RULES_HOME redirects both save and load away from the repo's own .claude directory", () => {
+  const root = makeDir();
+  const override = join(root, "elsewhere");
+  const facts = factsFor(root);
+  const env = { REPO_RULES_HOME: override };
+  save(facts, [ruleFor("tooling")], env);
+  assert.ok(existsSync(join(override, "rules.json")));
+  assert.equal(existsSync(join(root, ".claude", "repo-rules", "rules.json")), false);
+  const { found, rules } = load(facts, env);
+  assert.equal(found, true);
+  assert.equal(rules[0].id, "tooling.example");
 });
