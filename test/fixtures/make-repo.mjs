@@ -27,6 +27,13 @@ export function makeRepo({ remote = null, files = {} } = {}) {
   return root;
 }
 
+// The store touches only the filesystem, so its tests need a directory, not a repository.
+export function makeDir() {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "repo-rules-dir-")));
+  created.push(root);
+  return root;
+}
+
 export function addWorktree(root, name) {
   const path = join(root, "..", `${name}-wt`);
   execFileSync("git", ["worktree", "add", "-q", "-b", name, path], { cwd: root, stdio: "pipe" });
