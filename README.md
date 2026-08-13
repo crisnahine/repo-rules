@@ -12,29 +12,24 @@ placement.
 
 ## Install
 
+From Claude Code:
+
+```
+/plugin marketplace add crisnahine/repo-rules
+/plugin install repo-rules@crisnahine
+```
+
+Restart Claude Code, then run `/repo-rules:scan` in a repository.
+
+To work on the plugin itself, clone it and add the checkout as a local marketplace instead:
+
 ```bash
 git clone https://github.com/crisnahine/repo-rules.git
 ```
 
-This repository does not ship its own marketplace manifest, so wrap it in one to install it
-locally. Add a `.claude-plugin/marketplace.json` next to this checkout (or in a fork):
-
-```json
-{
-  "name": "repo-rules-dev",
-  "owner": { "name": "you" },
-  "plugins": [{ "name": "repo-rules", "source": "./", "version": "0.1.0" }]
-}
-```
-
-Then, from Claude Code:
-
 ```
 /plugin marketplace add /path/to/repo-rules
-/plugin install repo-rules@repo-rules-dev
 ```
-
-Restart Claude Code, then run `/repo-rules:scan` in a repository.
 
 ## Commands
 

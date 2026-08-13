@@ -1,0 +1,14 @@
+{
+  "name": "crisnahine",
+  "owner": {
+    "name": "crisnahine",
+    "url": "https://github.com/crisnahine"
+  },
+  "plugins": [
+    {
+      "name": "repo-rules",
+      "source": "./",
+      "description": "Extracts a repository's own conventions into .claude/rules/, with citations that resolve, and expires each rule when its evidence disappears."
+    }
+  ]
+}
