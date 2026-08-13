@@ -8,6 +8,8 @@ test("a descriptive statement produces no reasons", () => {
 
 test("rejects an imperative", () => {
   assert.ok(checkStatement("Always put tests in spec/.").some((r) => r.includes("imperative")));
+  assert.ok(checkStatement("Write tests before implementation.").some((r) => r.includes("imperative")));
+  assert.ok(checkStatement("Use tabs for indentation.").some((r) => r.includes("imperative")));
 });
 
 test("rejects an imperative hidden behind one leading connective", () => {
