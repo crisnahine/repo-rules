@@ -1,6 +1,6 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { writeFileSync, mkdirSync, rmSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { runScan, runCheck, runRender } from "../lib/commands.mjs";
 import { report } from "../lib/report.mjs";
@@ -49,6 +49,8 @@ test("check expires a rule whose cited quote is gone", () => {
   assert.equal(outcome.rules, 1);
   assert.equal(outcome.expired.length, 1);
   assert.equal(outcome.expired[0].id, "tooling.package-manager");
+  const persisted = JSON.parse(readFileSync(join(storeDir(facts, {}), "rules.json"), "utf8"));
+  assert.equal(persisted.length, 1);
 });
 
 test("check on a repo that was never scanned reports nothing found", () => {
@@ -111,4 +113,5 @@ test("report lists a dropped hand-edited rule with its reason", () => {
   );
   const lines = report(runRender(facts, {}));
   assert.ok(lines.some((l) => l.startsWith("dropped tooling.bogus:") && l.includes("newline")));
+  assert.equal(existsSync(join(root, ".claude", "rules", "tooling.md")), false);
 });
