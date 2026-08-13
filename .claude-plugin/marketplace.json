@@ -1,5 +1,6 @@
 {
   "name": "crisnahine",
+  "description": "Plugins that keep an AI coding agent aligned with the repository it is working in.",
   "owner": {
     "name": "crisnahine",
     "url": "https://github.com/crisnahine"
