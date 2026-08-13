@@ -62,18 +62,6 @@ test("a rule whose citations are all dead expires", () => {
   assert.equal(expired[0].reason, "every citation is dead (1 checked)");
 });
 
-test("an observed rule whose surviving citation still fails the gate expires with a gate reason", () => {
-  const root = makeRepo({ files: { "a.js": "alpha\n" } });
-  const rule = ruleWith([{ path: "a.js", lines: "1-1", quote: "alpha" }], {
-    source: "observed",
-    support: { followed: 4, candidates: 4, authors: 4, dirs: 3 },
-  });
-  const { live, expired } = expire([rule], root);
-  assert.equal(live.length, 0);
-  assert.equal(expired.length, 1);
-  assert.match(expired[0].reason, /supporting sites/);
-});
-
 test("a citation whose path escapes the repository is dead", () => {
   const root = makeRepo({ files: { "a.js": "alpha\n" } });
   const rule = ruleWith([{ path: "../../etc/passwd", lines: "1-1", quote: "root:x" }]);

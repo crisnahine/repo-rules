@@ -164,3 +164,14 @@ test("the committed store wins over a home store when both exist", () => {
   save(facts, [ruleFor("tooling")], {});
   assert.equal(load(facts, { HOME: home }).rules[0].id, "tooling.example");
 });
+
+test("load drops a hand-edited observed rule whose support never cleared the gate", () => {
+  const root = makeDir();
+  const facts = factsFor(root);
+  const weak = { ...ruleFor("tooling"), source: "observed", support: { followed: 4, candidates: 4, authors: 4, dirs: 3 } };
+  mkdirSync(storeDir(facts, {}), { recursive: true });
+  writeFileSync(join(storeDir(facts, {}), "rules.json"), JSON.stringify([weak], null, 2));
+  const { rules, dropped } = load(facts, {});
+  assert.deepEqual(rules, []);
+  assert.ok(dropped[0].reasons.some((r) => r.includes("supporting sites")));
+});
