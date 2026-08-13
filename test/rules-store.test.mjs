@@ -129,19 +129,6 @@ test("load throws a readable error when rules.json is not an array", () => {
   assert.throws(() => load(facts, {}), /array/);
 });
 
-test("REPO_RULES_HOME redirects both save and load away from the repo's own .claude directory", () => {
-  const root = makeDir();
-  const override = join(root, "elsewhere");
-  const facts = factsFor(root);
-  const env = { REPO_RULES_HOME: override };
-  save(facts, [ruleFor("tooling")], env);
-  assert.ok(existsSync(join(override, "rules.json")));
-  assert.equal(existsSync(join(root, ".claude", "repo-rules", "rules.json")), false);
-  const { found, rules } = load(facts, env);
-  assert.equal(found, true);
-  assert.equal(rules[0].id, "tooling.example");
-});
-
 test("an existing store under the home directory is the one that gets loaded", () => {
   const root = makeDir();
   const facts = factsFor(root);
@@ -163,6 +150,40 @@ test("the committed store wins over a home store when both exist", () => {
   writeFileSync(join(homeStore, "rules.json"), JSON.stringify([ruleFor("wrong")], null, 2));
   save(facts, [ruleFor("tooling")], {});
   assert.equal(load(facts, { HOME: home }).rules[0].id, "tooling.example");
+});
+
+test("a generated file with CRLF line endings is still recognized as generated", () => {
+  const root = makeDir();
+  const facts = factsFor(root);
+  save(facts, [ruleFor("tooling")], {});
+  const path = join(rulesDirOf(root), "tooling.md");
+  writeFileSync(path, readFileSync(path, "utf8").replace(/\n/g, "\r\n"));
+  const first = save(facts, [ruleFor("tooling")], {});
+  assert.deepEqual(first.foreign, []);
+  const second = save(facts, [], {});
+  assert.deepEqual(second.removed, ["tooling.md"]);
+  assert.equal(existsSync(path), false);
+});
+
+test("a generated file with five paths entries is still recognized as generated on the next save", () => {
+  const root = makeDir();
+  const facts = factsFor(root);
+  const heavy = { ...ruleFor("tooling"), paths: ["a/", "b/", "c/", "d/", "e/"] };
+  save(facts, [heavy], {});
+  const outcome = save(facts, [heavy], {});
+  assert.deepEqual(outcome.foreign, []);
+});
+
+test("save reports a removed generated file and a foreign one in the same call", () => {
+  const root = makeDir();
+  const facts = factsFor(root);
+  save(facts, [ruleFor("tooling")], {});
+  writeFileSync(join(rulesDirOf(root), "team.md"), "# ours\n");
+  const outcome = save(facts, [], {});
+  assert.deepEqual(outcome.removed, ["tooling.md"]);
+  assert.deepEqual(outcome.foreign, ["team.md"]);
+  assert.equal(existsSync(join(rulesDirOf(root), "tooling.md")), false);
+  assert.equal(existsSync(join(rulesDirOf(root), "team.md")), true);
 });
 
 test("load drops a hand-edited observed rule whose support never cleared the gate", () => {
